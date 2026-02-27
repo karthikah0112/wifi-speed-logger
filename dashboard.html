@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WiFi Speed Logger</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --border: #1e2d40;
+    --accent-dl: #00e5ff;
+    --accent-ul: #b44aff;
+    --accent-ping: #ff6b35;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --good: #22c55e;
+    --warn: #f59e0b;
+    --bad: #ef4444;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .logo {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .logo-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: var(--accent-dl);
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--accent-dl), var(--accent-ul));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .header-meta {
+    text-align: right;
+    font-size: 0.7rem;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .header-meta span {
+    color: var(--text);
+  }
+
+  /* Stat Cards */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--card-accent);
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--card-accent);
+  }
+
+  .stat-card.dl { --card-accent: var(--accent-dl); }
+  .stat-card.ul { --card-accent: var(--accent-ul); }
+  .stat-card.ping { --card-accent: var(--accent-ping); }
+
+  .stat-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--card-accent);
+    line-height: 1;
+    margin-bottom: 0.75rem;
+  }
+
+  .stat-unit {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .stat-sub {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .stat-sub-item {
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+
+  .stat-sub-item span {
+    color: var(--text);
+  }
+
+  /* Chart area */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .chart-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.05em;
+  }
+
+  .legend {
+    display: flex;
+    gap: 1.25rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  canvas {
+    max-height: 280px;
+  }
+
+  /* Table */
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  .table-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.72rem;
+  }
+
+  thead th {
+    padding: 0.6rem 1.5rem;
+    text-align: left;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-size: 0.6rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(30,45,64,0.5);
+    transition: background 0.15s;
+  }
+
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody tr:last-child { border-bottom: none; }
+
+  td {
+    padding: 0.65rem 1.5rem;
+    color: var(--text);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .badge-good { background: rgba(34,197,94,0.15); color: var(--good); }
+  .badge-warn { background: rgba(245,158,11,0.15); color: var(--warn); }
+  .badge-bad  { background: rgba(239,68,68,0.15);  color: var(--bad);  }
+
+  footer {
+    text-align: center;
+    padding: 2rem 0 1rem;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  footer a { color: var(--accent-dl); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo">
+      <div class="logo-label">// network monitor</div>
+      <h1>WiFi Speed Logger</h1>
+    </div>
+    <div class="header-meta">
+      <div>Total records: <span>53</span></div>
+      <div>Latest test: <span>2026-02-27 20:32:10</span></div>
+      <div>First test: <span>2026-02-26 20:06:57</span></div>
+    </div>
+  </header>
+
+  <!-- Stat Cards -->
+  <div class="stats-grid">
+    <div class="stat-card dl">
+      <div class="stat-label">↓ Download</div>
+      <div class="stat-value">91.2<span class="stat-unit"> Mbps</span></div>
+      <div class="stat-sub">
+        <div class="stat-sub-item">avg <span>80.9</span></div>
+        <div class="stat-sub-item">max <span>108.9</span></div>
+        <div class="stat-sub-item">min <span>13.9</span></div>
+      </div>
+    </div>
+    <div class="stat-card ul">
+      <div class="stat-label">↑ Upload</div>
+      <div class="stat-value">91.9<span class="stat-unit"> Mbps</span></div>
+      <div class="stat-sub">
+        <div class="stat-sub-item">avg <span>24.2</span></div>
+        <div class="stat-sub-item">max <span>92.3</span></div>
+        <div class="stat-sub-item">min <span>7.6</span></div>
+      </div>
+    </div>
+    <div class="stat-card ping">
+      <div class="stat-label">◎ Ping</div>
+      <div class="stat-value">22.8<span class="stat-unit"> ms</span></div>
+      <div class="stat-sub">
+        <div class="stat-sub-item">avg <span>24.0</span></div>
+        <div class="stat-sub-item">max <span>166.1</span></div>
+        <div class="stat-sub-item">min <span>3.5</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Speed Chart -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div class="chart-title">Download & Upload Speed</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#00e5ff"></div>Download</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#b44aff"></div>Upload</div>
+      </div>
+    </div>
+    <canvas id="speedChart"></canvas>
+  </div>
+
+  <!-- Ping Chart -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div class="chart-title">Ping Latency</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#ff6b35"></div>Ping (ms)</div>
+      </div>
+    </div>
+    <canvas id="pingChart"></canvas>
+  </div>
+
+  <!-- Recent Results Table -->
+  <div class="table-card">
+    <div class="table-header">Recent Results</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Download</th>
+            <th>Upload</th>
+            <th>Ping</th>
+            <th>ISP</th>
+            <th>Server</th>
+            <th>Quality</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    WiFi Speed Logger &mdash; Built with Python &amp; Chart.js &mdash;
+    <a href="https://github.com/yourusername/wifi-speed-logger" target="_blank">GitHub</a>
+  </footer>
+</div>
+
+<script>
+const DATA = {"labels": ["2026-02-26 20:06:57", "2026-02-26 20:36:57", "2026-02-26 21:06:57", "2026-02-26 21:36:57", "2026-02-26 22:06:57", "2026-02-26 22:36:57", "2026-02-26 23:06:57", "2026-02-26 23:36:57", "2026-02-27 00:06:57", "2026-02-27 00:36:57", "2026-02-27 01:06:57", "2026-02-27 01:36:57", "2026-02-27 02:06:57", "2026-02-27 02:36:57", "2026-02-27 03:06:57", "2026-02-27 03:36:57", "2026-02-27 04:06:57", "2026-02-27 04:36:57", "2026-02-27 05:06:57", "2026-02-27 05:36:57", "2026-02-27 06:06:57", "2026-02-27 06:36:57", "2026-02-27 07:06:57", "2026-02-27 07:36:57", "2026-02-27 08:06:57", "2026-02-27 08:36:57", "2026-02-27 09:06:57", "2026-02-27 09:36:57", "2026-02-27 10:06:57", "2026-02-27 10:36:57", "2026-02-27 11:06:57", "2026-02-27 11:36:57", "2026-02-27 12:06:57", "2026-02-27 12:36:57", "2026-02-27 13:06:57", "2026-02-27 13:36:57", "2026-02-27 14:06:57", "2026-02-27 14:36:57", "2026-02-27 15:06:57", "2026-02-27 15:36:57", "2026-02-27 16:06:57", "2026-02-27 16:36:57", "2026-02-27 17:06:57", "2026-02-27 17:36:57", "2026-02-27 18:06:57", "2026-02-27 18:36:57", "2026-02-27 19:06:57", "2026-02-27 19:36:57", "2026-02-27 20:15:09", "2026-02-27 20:17:52", "2026-02-27 20:18:45", "2026-02-27 20:23:28", "2026-02-27 20:32:10"], "download": [95.26, 85.91, 87.73, 92.32, 101.54, 73.05, 80.63, 76.84, 70.06, 57.98, 102.5, 86.55, 68.91, 77.94, 104.25, 95.26, 99.35, 100.72, 89.8, 107.11, 84.0, 75.56, 23.64, 98.55, 85.45, 72.1, 92.13, 99.75, 86.11, 73.93, 28.57, 94.82, 68.14, 24.3, 68.44, 86.57, 86.65, 55.28, 80.65, 26.01, 80.08, 13.94, 107.94, 102.24, 92.75, 108.94, 72.52, 87.88, 92.09, 92.01, 91.73, 90.92, 91.25], "upload": [20.52, 11.79, 24.07, 15.88, 23.07, 16.36, 11.49, 15.19, 19.05, 15.97, 11.19, 19.38, 20.82, 7.64, 18.4, 13.39, 16.12, 11.89, 21.68, 21.87, 20.98, 15.07, 20.14, 18.42, 19.93, 19.82, 16.83, 14.9, 16.34, 14.75, 20.92, 16.44, 17.2, 21.53, 14.96, 17.41, 14.82, 17.7, 16.87, 22.68, 8.29, 14.67, 14.38, 14.01, 20.74, 22.0, 21.4, 11.74, 92.08, 91.85, 92.27, 91.48, 91.88], "ping": [8.76, 13.96, 14.84, 7.35, 12.7, 12.91, 15.55, 12.85, 20.65, 12.66, 8.86, 15.47, 23.56, 12.31, 8.89, 11.15, 7.22, 15.82, 5.75, 12.53, 25.89, 7.97, 142.31, 12.38, 7.93, 11.77, 15.69, 11.8, 5.98, 9.31, 87.91, 11.04, 18.67, 97.96, 5.92, 11.7, 15.38, 9.28, 23.18, 166.1, 22.4, 91.25, 20.64, 3.52, 14.44, 18.23, 21.36, 20.99, 22.88, 20.48, 22.29, 20.05, 22.78]};
+
+// Shorten labels for display
+const shortLabels = DATA.labels.map(l => {
+  const d = new Date(l);
+  return d.toLocaleString('en-GB', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+});
+
+const chartDefaults = {
+  responsive: true,
+  maintainAspectRatio: true,
+  interaction: { mode: 'index', intersect: false },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#111827',
+      borderColor: '#1e2d40',
+      borderWidth: 1,
+      titleColor: '#64748b',
+      bodyColor: '#e2e8f0',
+      padding: 10,
+      titleFont: { family: 'Space Mono', size: 10 },
+      bodyFont: { family: 'Space Mono', size: 11 },
+    }
+  },
+  scales: {
+    x: {
+      ticks: {
+        color: '#64748b',
+        font: { family: 'Space Mono', size: 9 },
+        maxTicksLimit: 10,
+        maxRotation: 30,
+      },
+      grid: { color: 'rgba(30,45,64,0.6)' },
+    },
+    y: {
+      ticks: { color: '#64748b', font: { family: 'Space Mono', size: 9 } },
+      grid: { color: 'rgba(30,45,64,0.6)' },
+    }
+  }
+};
+
+// Speed Chart
+new Chart(document.getElementById('speedChart'), {
+  type: 'line',
+  data: {
+    labels: shortLabels,
+    datasets: [
+      {
+        label: 'Download (Mbps)',
+        data: DATA.download,
+        borderColor: '#00e5ff',
+        backgroundColor: 'rgba(0,229,255,0.06)',
+        borderWidth: 2,
+        pointRadius: DATA.download.length > 30 ? 0 : 3,
+        pointHoverRadius: 5,
+        tension: 0.3,
+        fill: true,
+      },
+      {
+        label: 'Upload (Mbps)',
+        data: DATA.upload,
+        borderColor: '#b44aff',
+        backgroundColor: 'rgba(180,74,255,0.06)',
+        borderWidth: 2,
+        pointRadius: DATA.upload.length > 30 ? 0 : 3,
+        pointHoverRadius: 5,
+        tension: 0.3,
+        fill: true,
+      }
+    ]
+  },
+  options: { ...chartDefaults }
+});
+
+// Ping Chart
+new Chart(document.getElementById('pingChart'), {
+  type: 'line',
+  data: {
+    labels: shortLabels,
+    datasets: [{
+      label: 'Ping (ms)',
+      data: DATA.ping,
+      borderColor: '#ff6b35',
+      backgroundColor: 'rgba(255,107,53,0.06)',
+      borderWidth: 2,
+      pointRadius: DATA.ping.length > 30 ? 0 : 3,
+      pointHoverRadius: 5,
+      tension: 0.3,
+      fill: true,
+    }]
+  },
+  options: { ...chartDefaults }
+});
+
+// Table (last 20 results, newest first)
+const tbody = document.getElementById('tableBody');
+const recent = [...DATA.labels.map((l,i) => ({
+  ts: l, dl: DATA.download[i], ul: DATA.upload[i], ping: DATA.ping[i]
+}))].reverse().slice(0, 20);
+
+recent.forEach(r => {
+  let quality, cls;
+  if (r.dl >= 50 && r.ping <= 20) { quality = 'Excellent'; cls = 'badge-good'; }
+  else if (r.dl >= 20 && r.ping <= 50) { quality = 'Good'; cls = 'badge-good'; }
+  else if (r.dl >= 5 && r.ping <= 100) { quality = 'Fair'; cls = 'badge-warn'; }
+  else { quality = 'Poor'; cls = 'badge-bad'; }
+
+  tbody.innerHTML += `<tr>
+    <td>${r.ts}</td>
+    <td style="color:#00e5ff">${r.dl} Mbps</td>
+    <td style="color:#b44aff">${r.ul} Mbps</td>
+    <td style="color:#ff6b35">${r.ping} ms</td>
+    <td>—</td>
+    <td>—</td>
+    <td><span class="badge ${cls}">${quality}</span></td>
+  </tr>`;
+});
+</script>
+</body>
+</html>

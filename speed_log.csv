@@ -1,0 +1,54 @@
+timestamp,download_mbps,upload_mbps,ping_ms,isp,server
+2026-02-26 20:06:57,95.26,20.52,8.76,Sky Broadband,Manchester
+2026-02-26 20:36:57,85.91,11.79,13.96,Sky Broadband,London
+2026-02-26 21:06:57,87.73,24.07,14.84,Sky Broadband,Manchester
+2026-02-26 21:36:57,92.32,15.88,7.35,BT,Manchester
+2026-02-26 22:06:57,101.54,23.07,12.7,Virgin Media,Birmingham
+2026-02-26 22:36:57,73.05,16.36,12.91,Virgin Media,Manchester
+2026-02-26 23:06:57,80.63,11.49,15.55,Virgin Media,Manchester
+2026-02-26 23:36:57,76.84,15.19,12.85,Sky Broadband,Birmingham
+2026-02-27 00:06:57,70.06,19.05,20.65,Sky Broadband,Birmingham
+2026-02-27 00:36:57,57.98,15.97,12.66,Sky Broadband,London
+2026-02-27 01:06:57,102.5,11.19,8.86,Virgin Media,Manchester
+2026-02-27 01:36:57,86.55,19.38,15.47,Virgin Media,Manchester
+2026-02-27 02:06:57,68.91,20.82,23.56,BT,London
+2026-02-27 02:36:57,77.94,7.64,12.31,Virgin Media,Manchester
+2026-02-27 03:06:57,104.25,18.4,8.89,BT,Birmingham
+2026-02-27 03:36:57,95.26,13.39,11.15,BT,London
+2026-02-27 04:06:57,99.35,16.12,7.22,Virgin Media,London
+2026-02-27 04:36:57,100.72,11.89,15.82,Sky Broadband,Manchester
+2026-02-27 05:06:57,89.8,21.68,5.75,Virgin Media,London
+2026-02-27 05:36:57,107.11,21.87,12.53,BT,Birmingham
+2026-02-27 06:06:57,84.0,20.98,25.89,Virgin Media,Birmingham
+2026-02-27 06:36:57,75.56,15.07,7.97,Sky Broadband,Manchester
+2026-02-27 07:06:57,23.64,20.14,142.31,Sky Broadband,London
+2026-02-27 07:36:57,98.55,18.42,12.38,Sky Broadband,Manchester
+2026-02-27 08:06:57,85.45,19.93,7.93,Virgin Media,Birmingham
+2026-02-27 08:36:57,72.1,19.82,11.77,Virgin Media,Birmingham
+2026-02-27 09:06:57,92.13,16.83,15.69,Sky Broadband,London
+2026-02-27 09:36:57,99.75,14.9,11.8,BT,London
+2026-02-27 10:06:57,86.11,16.34,5.98,Sky Broadband,Manchester
+2026-02-27 10:36:57,73.93,14.75,9.31,Sky Broadband,Birmingham
+2026-02-27 11:06:57,28.57,20.92,87.91,Sky Broadband,Birmingham
+2026-02-27 11:36:57,94.82,16.44,11.04,BT,London
+2026-02-27 12:06:57,68.14,17.2,18.67,Virgin Media,Manchester
+2026-02-27 12:36:57,24.3,21.53,97.96,Sky Broadband,Manchester
+2026-02-27 13:06:57,68.44,14.96,5.92,Sky Broadband,London
+2026-02-27 13:36:57,86.57,17.41,11.7,BT,Manchester
+2026-02-27 14:06:57,86.65,14.82,15.38,BT,Manchester
+2026-02-27 14:36:57,55.28,17.7,9.28,Sky Broadband,London
+2026-02-27 15:06:57,80.65,16.87,23.18,BT,Manchester
+2026-02-27 15:36:57,26.01,22.68,166.1,BT,Manchester
+2026-02-27 16:06:57,80.08,8.29,22.4,Sky Broadband,London
+2026-02-27 16:36:57,13.94,14.67,91.25,Sky Broadband,London
+2026-02-27 17:06:57,107.94,14.38,20.64,Sky Broadband,Manchester
+2026-02-27 17:36:57,102.24,14.01,3.52,BT,Birmingham
+2026-02-27 18:06:57,92.75,20.74,14.44,Virgin Media,Manchester
+2026-02-27 18:36:57,108.94,22.0,18.23,BT,Birmingham
+2026-02-27 19:06:57,72.52,21.4,21.36,Virgin Media,London
+2026-02-27 19:36:57,87.88,11.74,20.99,Virgin Media,Manchester
+2026-02-27 20:15:09,92.09,92.08,22.88,Virgin Media,London
+2026-02-27 20:17:52,92.01,91.85,20.48,Virgin Media,London
+2026-02-27 20:18:45,91.73,92.27,22.29,Virgin Media,London
+2026-02-27 20:23:28,90.92,91.48,20.05,Virgin Media,London
+2026-02-27 20:32:10,91.25,91.88,22.78,Virgin Media,London
